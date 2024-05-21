@@ -33,7 +33,7 @@
                 <button type="submit">Generate PDF</button>
             </form>
             <div class="result" id="result">
-                <button id="downloadBtn" style="display:none;">Download PDF</button>
+                <!-- The download button will be created dynamically -->
             </div>
         </div>
     </section>
@@ -55,7 +55,16 @@
                 const filename = data.filename;
                 const resultDiv = document.getElementById('result');
                 resultDiv.innerHTML = `<iframe src="https://venom343.pythonanywhere.com/download/${filename}"></iframe>`;
-                const downloadBtn = document.getElementById('downloadBtn');
+                
+                // Create the download button if it doesn't exist
+                let downloadBtn = document.getElementById('downloadBtn');
+                if (!downloadBtn) {
+                    downloadBtn = document.createElement('button');
+                    downloadBtn.id = 'downloadBtn';
+                    downloadBtn.textContent = 'Download PDF';
+                    resultDiv.appendChild(downloadBtn);
+                }
+                
                 downloadBtn.style.display = 'block';
                 downloadBtn.onclick = () => {
                     const link = document.createElement('a');
