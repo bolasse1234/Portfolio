@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handwritten Text Generator | My Portfolio</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="projects.html">Projects</a></li>
+                <li><a href="skills.html">Skills & Hobbies</a></li>
+                <li><a href="videos.html">Videos</a></li>
+                <li><a href="generator.html">Handwritten Text Generator</a></li>
+            </ul>
+        </nav>
+    </header>
+    <section class="generator-section">
+        <h1>Handwritten Text Generator</h1>
+        <div class="container">
+            <form id="textForm">
+                <label for="fontFile">Upload your font (.ttf file):</label>
+                <input type="file" id="fontFile" name="fontFile" accept=".ttf" required>
+
+                <label for="textInput">Enter your text:</label>
+                <textarea id="textInput" name="textInput" rows="4" required></textarea>
+
+                <button type="submit">Generate PDF</button>
+            </form>
+            <div class="result" id="result">
+                <button id="downloadBtn" style="display:none;">Download PDF</button>
+            </div>
+        </div>
+    </section>
+    <script>
+        document.getElementById('textForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const formData = new FormData();
+            formData.append('fontFile', document.getElementById('fontFile').files[0]);
+            formData.append('textInput', document.getElementById('textInput').value);
+
+            const response = await fetch('https://venom343.pythonanywhere.com/generate', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `<iframe src="${url}"></iframe>`;
+                const downloadBtn = document.getElementById('downloadBtn');
+                downloadBtn.style.display = 'block';
+                downloadBtn.onclick = () => {
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `handwritten_${Math.random().toString(36).substr(2, 9)}.pdf`;
+                    link.click();
+                };
+            } else {
+                alert('Failed to generate PDF. Please try again.');
+            }
+        });
+    </script>
+</body>
+
+</html>
