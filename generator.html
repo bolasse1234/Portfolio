@@ -51,16 +51,16 @@
             });
 
             if (response.ok) {
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
+                const data = await response.json();
+                const filename = data.filename;
                 const resultDiv = document.getElementById('result');
-                resultDiv.innerHTML = `<iframe src="${url}"></iframe>`;
+                resultDiv.innerHTML = `<iframe src="https://venom343.pythonanywhere.com/download/${filename}"></iframe>`;
                 const downloadBtn = document.getElementById('downloadBtn');
                 downloadBtn.style.display = 'block';
                 downloadBtn.onclick = () => {
                     const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `handwritten_${Math.random().toString(36).substr(2, 9)}.pdf`;
+                    link.href = `https://venom343.pythonanywhere.com/download/${filename}`;
+                    link.download = filename;
                     link.click();
                 };
             } else {
