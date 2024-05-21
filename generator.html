@@ -7,6 +7,14 @@
     <title>Handwritten Text Generator | My Portfolio</title>
     <link rel="stylesheet" href="styles.css">
     <style>
+        .generator-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
         .container {
             background-color: #1e1e1e;
             padding: 30px;
@@ -14,7 +22,6 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             max-width: 600px;
             width: 100%;
-            margin: 0 auto;
             text-align: center;
         }
 
@@ -78,8 +85,8 @@
         </nav>
     </header>
     <section class="generator-section">
-        <h1>Handwritten Text Generator</h1>
         <div class="container">
+            <h1>Handwritten Text Generator</h1>
             <form id="textForm">
                 <label for="fontFile">Upload your font (.ttf file):</label>
                 <input type="file" id="fontFile" name="fontFile" accept=".ttf" required>
