@@ -170,17 +170,19 @@
         }
 
         function getX(e) {
+            const rect = drawingCanvas.getBoundingClientRect();
             if (e.touches && e.touches.length > 0) {
-                return e.touches[0].clientX - drawingCanvas.getBoundingClientRect().left;
+                return (e.touches[0].clientX - rect.left) * (drawingCanvas.width / rect.width);
             }
-            return e.clientX - drawingCanvas.getBoundingClientRect().left;
+            return (e.clientX - rect.left) * (drawingCanvas.width / rect.width);
         }
 
         function getY(e) {
+            const rect = drawingCanvas.getBoundingClientRect();
             if (e.touches && e.touches.length > 0) {
-                return e.touches[0].clientY - drawingCanvas.getBoundingClientRect().top;
+                return (e.touches[0].clientY - rect.top) * (drawingCanvas.height / rect.height);
             }
-            return e.clientY - drawingCanvas.getBoundingClientRect().top;
+            return (e.clientY - rect.top) * (drawingCanvas.height / rect.height);
         }
 
         startButton.addEventListener('click', function() {
