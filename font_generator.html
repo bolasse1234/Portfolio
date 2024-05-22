@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Font Generator | My Portfolio</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .font-generator-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #1e1e1e;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        #drawingCanvas {
+            border: 1px solid #333333;
+            background-color: #ffffff;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="projects.html">Projects</a></li>
+                <li><a href="skills.html">Skills & Hobbies</a></li>
+                <li><a href="videos.html">Videos</a></li>
+                <li><a href="generator.html">Handwritten Text Generator</a></li>
+                <li><a href="font_generator.html">Font Generator</a></li>
+            </ul>
+        </nav>
+    </header>
+    <section class="font-generator-section">
+        <div class="container">
+            <h1>Font Generator</h1>
+            <button id="startButton">Start</button>
+            <div id="drawingArea" style="display:none;">
+                <h2 id="currentCharacter"></h2>
+                <canvas id="drawingCanvas" width="400" height="400"></canvas>
+                <button id="nextButton">Next</button>
+            </div>
+        </div>
+    </section>
+    <script>
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.;:,';
+        let currentCharIndex = 0;
+        const startButton = document.getElementById('startButton');
+        const drawingArea = document.getElementById('drawingArea');
+        const currentCharacter = document.getElementById('currentCharacter');
+        const drawingCanvas = document.getElementById('drawingCanvas');
+        const nextButton = document.getElementById('nextButton');
+        const ctx = drawingCanvas.getContext('2d');
+        const drawings = {};
+
+        function clearCanvas() {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            ctx.strokeStyle = '#000000';
+        }
+
+        function drawCharacter(character) {
+            currentCharacter.textContent = character;
+        }
+
+        function saveDrawing(character) {
+            drawings[character] = drawingCanvas.toDataURL();
+        }
+
+        function nextCharacter() {
+            if (currentCharIndex < characters.length) {
+                saveDrawing(characters[currentCharIndex]);
+                currentCharIndex++;
+                if (currentCharIndex < characters.length) {
+                    drawCharacter(characters[currentCharIndex]);
+                    clearCanvas();
+                } else {
+                    // Send drawings to server
+                    fetch('https://venom343.pythonanywhere.com/generate_font', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(drawings)
+                    })
+                    .then(response => response.blob())
+                    .then(blob => {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'custom_font.ttf';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    })
+                    .catch(error => console.error('Error:', error));
+                }
+            }
+        }
+
+        drawingCanvas.addEventListener('mousedown', function(e) {
+            ctx.beginPath();
+            ctx.moveTo(e.offsetX, e.offsetY);
+            drawingCanvas.addEventListener('mousemove', draw);
+        });
+
+        drawingCanvas.addEventListener('mouseup', function() {
+            drawingCanvas.removeEventListener('mousemove', draw);
+        });
+
+        function draw(e) {
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+        }
+
+        startButton.addEventListener('click', function() {
+            currentCharIndex = 0;
+            drawingArea.style.display = 'block';
+            drawCharacter(characters[currentCharIndex]);
+            clearCanvas();
+        });
+
+        nextButton.addEventListener('click', nextCharacter);
+    </script>
+</body>
+
+</html>
