@@ -30,6 +30,7 @@
             border: 1px solid #333333;
             background-color: #ffffff;
             margin-top: 20px;
+            touch-action: none; /* Prevent default touch actions */
         }
 
         button {
@@ -129,19 +130,49 @@
             }
         }
 
-        drawingCanvas.addEventListener('mousedown', function(e) {
-            ctx.beginPath();
-            ctx.moveTo(e.offsetX, e.offsetY);
-            drawingCanvas.addEventListener('mousemove', draw);
-        });
+        drawingCanvas.addEventListener('mousedown', startDrawing);
+        drawingCanvas.addEventListener('mousemove', draw);
+        drawingCanvas.addEventListener('mouseup', stopDrawing);
+        drawingCanvas.addEventListener('mouseout', stopDrawing);
 
-        drawingCanvas.addEventListener('mouseup', function() {
-            drawingCanvas.removeEventListener('mousemove', draw);
-        });
+        drawingCanvas.addEventListener('touchstart', startDrawing, { passive: false });
+        drawingCanvas.addEventListener('touchmove', draw, { passive: false });
+        drawingCanvas.addEventListener('touchend', stopDrawing);
+
+        let isDrawing = false;
+
+        function startDrawing(e) {
+            e.preventDefault();
+            isDrawing = true;
+            ctx.beginPath();
+            ctx.moveTo(getX(e), getY(e));
+        }
 
         function draw(e) {
-            ctx.lineTo(e.offsetX, e.offsetY);
+            if (!isDrawing) return;
+            e.preventDefault();
+            ctx.lineTo(getX(e), getY(e));
             ctx.stroke();
+        }
+
+        function stopDrawing(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            isDrawing = false;
+        }
+
+        function getX(e) {
+            if (e.touches && e.touches.length > 0) {
+                return e.touches[0].clientX - drawingCanvas.getBoundingClientRect().left;
+            }
+            return e.clientX - drawingCanvas.getBoundingClientRect().left;
+        }
+
+        function getY(e) {
+            if (e.touches && e.touches.length > 0) {
+                return e.touches[0].clientY - drawingCanvas.getBoundingClientRect().top;
+            }
+            return e.clientY - drawingCanvas.getBoundingClientRect().top;
         }
 
         startButton.addEventListener('click', function() {
