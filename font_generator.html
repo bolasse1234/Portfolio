@@ -69,13 +69,13 @@
             <button id="startButton">Start</button>
             <div id="drawingArea" style="display:none;">
                 <h2 id="currentCharacter"></h2>
-                <canvas id="drawingCanvas" width="400" height="400"></canvas>
+                <canvas id="drawingCanvas" width="800" height="800"></canvas>
                 <button id="nextButton">Next</button>
             </div>
         </div>
     </section>
     <script>
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.;:,';
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzäöü0123456789.;:,';
         let currentCharIndex = 0;
         const startButton = document.getElementById('startButton');
         const drawingArea = document.getElementById('drawingArea');
