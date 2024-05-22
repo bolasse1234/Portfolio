@@ -31,6 +31,8 @@
             background-color: #ffffff;
             margin-top: 20px;
             touch-action: none; /* Prevent default touch actions */
+            width: 400px;  /* Display size */
+            height: 400px; /* Display size */
         }
 
         button {
@@ -69,7 +71,7 @@
             <button id="startButton">Start</button>
             <div id="drawingArea" style="display:none;">
                 <h2 id="currentCharacter"></h2>
-                <canvas id="drawingCanvas" width="800" height="800"></canvas>
+                <canvas id="drawingCanvas" width="1600" height="1600"></canvas> <!-- Increased resolution -->
                 <button id="nextButton">Next</button>
             </div>
         </div>
@@ -89,6 +91,7 @@
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, drawingCanvas.width, drawingCanvas.height);
             ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 4;  // Thicker lines for better visibility
         }
 
         function drawCharacter(character) {
@@ -96,7 +99,12 @@
         }
 
         function saveDrawing(character) {
-            drawings[character] = drawingCanvas.toDataURL();
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = 400;  // Scale down size
+            tempCanvas.height = 400; // Scale down size
+            tempCtx.drawImage(drawingCanvas, 0, 0, 400, 400);
+            drawings[character] = tempCanvas.toDataURL();
         }
 
         function nextCharacter() {
