@@ -56,6 +56,7 @@
             gap: 10px;
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/opentype.js/0.6.8/opentype.min.js"></script>
 </head>
 
 <body>
@@ -77,7 +78,7 @@
             <button id="startButton">Start</button>
             <div id="drawingArea" style="display:none;">
                 <h2 id="currentCharacter"></h2>
-                <canvas id="drawingCanvas" width="1600" height="1600"></canvas> <!-- Increased resolution -->
+                <canvas id="drawingCanvas" width="400" height="400"></canvas>
                 <div class="button-group">
                     <button id="deleteButton">Delete</button>
                     <button id="nextButton">Next</button>
@@ -109,12 +110,7 @@
         }
 
         function saveDrawing(character) {
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCanvas.width = 400;  // Scale down size
-            tempCanvas.height = 400; // Scale down size
-            tempCtx.drawImage(drawingCanvas, 0, 0, 400, 400);
-            drawings[character] = tempCanvas.toDataURL();
+            drawings[character] = drawingCanvas.toDataURL();
         }
 
         function nextCharacter() {
@@ -125,36 +121,70 @@
                     drawCharacter(characters[currentCharIndex]);
                     clearCanvas();
                 } else {
-                    // Send drawings to server
-                    fetch('https://venom343.pythonanywhere.com/generate_font', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(drawings)
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.blob();
-                    })
-                    .then(blob => {
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = 'custom_font.ttf';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                    })
-                    .catch(error => console.error('Error:', error));
+                    // Generate font
+                    generateFont();
                 }
             }
         }
 
         function deleteDrawing() {
             clearCanvas();
+        }
+
+        function generateFont() {
+            const font = new opentype.Font({
+                familyName: 'CustomFont',
+                styleName: 'Regular',
+                unitsPerEm: 1000,
+                ascender: 800,
+                descender: -200,
+                glyphs: []
+            });
+
+            characters.split('').forEach((character, index) => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 1000;
+                canvas.height = 1000;
+                const tempCtx = canvas.getContext('2d');
+                const img = new Image();
+                img.src = drawings[character];
+                img.onload = () => {
+                    tempCtx.drawImage(img, 0, 0, 1000, 1000);
+                    const imageData = tempCtx.getImageData(0, 0, 1000, 1000);
+                    const glyph = new opentype.Glyph({
+                        name: character,
+                        unicode: character.charCodeAt(0),
+                        advanceWidth: 600,
+                        path: new opentype.Path()
+                    });
+
+                    for (let y = 0; y < imageData.height; y++) {
+                        for (let x = 0; x < imageData.width; x++) {
+                            const alpha = imageData.data[(y * imageData.width + x) * 4 + 3];
+                            if (alpha > 128) {
+                                glyph.path.moveTo(x, 1000 - y);
+                                glyph.path.lineTo(x + 1, 1000 - y);
+                                glyph.path.lineTo(x + 1, 1000 - (y + 1));
+                                glyph.path.lineTo(x, 1000 - (y + 1));
+                                glyph.path.closePath();
+                            }
+                        }
+                    }
+
+                    font.glyphs.push(glyph);
+
+                    if (index === characters.length - 1) {
+                        const fontBlob = new Blob([font.toArrayBuffer()], { type: 'font/ttf' });
+                        const url = URL.createObjectURL(fontBlob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'custom_font.ttf';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    }
+                };
+            });
         }
 
         drawingCanvas.addEventListener('mousedown', startDrawing);
