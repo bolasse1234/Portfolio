@@ -141,49 +141,52 @@
                 glyphs: []
             });
 
-            characters.split('').forEach((character, index) => {
-                const canvas = document.createElement('canvas');
-                canvas.width = 1000;
-                canvas.height = 1000;
-                const tempCtx = canvas.getContext('2d');
-                const img = new Image();
-                img.src = drawings[character];
-                img.onload = () => {
-                    tempCtx.drawImage(img, 0, 0, 1000, 1000);
-                    const imageData = tempCtx.getImageData(0, 0, 1000, 1000);
-                    const glyph = new opentype.Glyph({
-                        name: character,
-                        unicode: character.charCodeAt(0),
-                        advanceWidth: 600,
-                        path: new opentype.Path()
-                    });
+            const promises = characters.split('').map((character) => {
+                return new Promise((resolve) => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 1000;
+                    canvas.height = 1000;
+                    const tempCtx = canvas.getContext('2d');
+                    const img = new Image();
+                    img.src = drawings[character];
+                    img.onload = () => {
+                        tempCtx.drawImage(img, 0, 0, 1000, 1000);
+                        const imageData = tempCtx.getImageData(0, 0, 1000, 1000);
+                        const glyph = new opentype.Glyph({
+                            name: character,
+                            unicode: character.charCodeAt(0),
+                            advanceWidth: 600,
+                            path: new opentype.Path()
+                        });
 
-                    for (let y = 0; y < imageData.height; y++) {
-                        for (let x = 0; x < imageData.width; x++) {
-                            const alpha = imageData.data[(y * imageData.width + x) * 4 + 3];
-                            if (alpha > 128) {
-                                glyph.path.moveTo(x, 1000 - y);
-                                glyph.path.lineTo(x + 1, 1000 - y);
-                                glyph.path.lineTo(x + 1, 1000 - (y + 1));
-                                glyph.path.lineTo(x, 1000 - (y + 1));
-                                glyph.path.closePath();
+                        for (let y = 0; y < imageData.height; y++) {
+                            for (let x = 0; x < imageData.width; x++) {
+                                const alpha = imageData.data[(y * imageData.width + x) * 4 + 3];
+                                if (alpha > 128) {
+                                    glyph.path.moveTo(x, 1000 - y);
+                                    glyph.path.lineTo(x + 1, 1000 - y);
+                                    glyph.path.lineTo(x + 1, 1000 - (y + 1));
+                                    glyph.path.lineTo(x, 1000 - (y + 1));
+                                    glyph.path.closePath();
+                                }
                             }
                         }
-                    }
 
-                    font.glyphs.push(glyph);
+                        font.glyphs.push(glyph);
+                        resolve();
+                    };
+                });
+            });
 
-                    if (index === characters.length - 1) {
-                        const fontBlob = new Blob([font.toArrayBuffer()], { type: 'font/ttf' });
-                        const url = URL.createObjectURL(fontBlob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = 'custom_font.ttf';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                    }
-                };
+            Promise.all(promises).then(() => {
+                const fontBlob = new Blob([font.toArrayBuffer()], { type: 'font/ttf' });
+                const url = URL.createObjectURL(fontBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'custom_font.ttf';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
             });
         }
 
