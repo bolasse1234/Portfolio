@@ -191,9 +191,9 @@
                     convertedTextArea.style.fontFamily = 'monospace';  // Use a monospace font for better visibility
                     
                     // Highlight unsupported characters
-                    const unsupportedChars = data.convertedText.split('').map(char => char === '□' ? '<span style="color: red;">□</span>' : char).join('');
+                    const highlightedText = data.convertedText.replace(/\[(.)\]/g, '<span style="color: red;">$1</span>');
                     const highlightDiv = document.createElement('div');
-                    highlightDiv.innerHTML = `<p>Red squares (□) indicate unsupported characters:</p><p>${unsupportedChars}</p>`;
+                    highlightDiv.innerHTML = `<p>Characters in red are not supported by the custom font:</p><p>${highlightedText}</p>`;
                     document.getElementById('result').appendChild(highlightDiv);
                 }
             })
