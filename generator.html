@@ -127,6 +127,9 @@
             </form>
             <button type="button" id="convertTextButton">Convert Text Only</button>
             <textarea id="convertedText" rows="5" cols="50" readonly></textarea>
+            <p id="infoMessage" style="color: #ffffff; margin-top: 10px;">
+                Unsupported characters have been skipped in the converted text.
+            </p>
             <button type="button" id="copyTextButton">Copy Converted Text</button>
             <div class="result" id="result">
                 <!-- The download button will be created dynamically -->
@@ -190,11 +193,11 @@
                     convertedTextArea.value = data.convertedText;
                     convertedTextArea.style.fontFamily = 'monospace';  // Use a monospace font for better visibility
                     
-                    // Highlight unsupported characters
-                    const highlightedText = data.convertedText.replace(/\[(.)\]/g, '<span style="color: red;">$1</span>');
-                    const highlightDiv = document.createElement('div');
-                    highlightDiv.innerHTML = `<p>Characters in red are not supported by the custom font:</p><p>${highlightedText}</p>`;
-                    document.getElementById('result').appendChild(highlightDiv);
+                    // Remove any existing highlightDiv to prevent multiple appends
+                    const existingHighlight = document.getElementById('highlightDiv');
+                    if (existingHighlight) {
+                        existingHighlight.remove();
+                    }
                 }
             })
             .catch(error => {
@@ -206,8 +209,15 @@
         document.getElementById('copyTextButton').addEventListener('click', function() {
             var convertedText = document.getElementById('convertedText');
             convertedText.select();
-            document.execCommand('copy');
-            alert('Converted text copied to clipboard!');
+            convertedText.setSelectionRange(0, 99999); // For mobile devices
+
+            navigator.clipboard.writeText(convertedText.value)
+                .then(() => {
+                    alert('Converted text copied to clipboard!');
+                })
+                .catch(err => {
+                    console.error('Failed to copy text: ', err);
+                });
         });
     </script>
 </body>
