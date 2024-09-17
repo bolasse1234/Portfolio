@@ -79,6 +79,17 @@
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
+
+        textarea#convertedText {
+            width: 100%;
+            height: 100px;
+            margin-top: 10px;
+            background-color: #2e2e2e;
+            color: #ffffff;
+            border: 1px solid #333333;
+            padding: 10px;
+            resize: vertical;
+        }
     </style>
 </head>
 
@@ -114,6 +125,9 @@
 
                 <button type="submit">Generate PDF</button>
             </form>
+            <button type="button" id="convertTextButton">Convert Text Only</button>
+            <textarea id="convertedText" rows="5" cols="50" readonly></textarea>
+            <button type="button" id="copyTextButton">Copy Converted Text</button>
             <div class="result" id="result">
                 <!-- The download button will be created dynamically -->
             </div>
@@ -158,6 +172,34 @@
             } else {
                 alert('Failed to generate PDF. Please try again.');
             }
+        });
+
+        document.getElementById('convertTextButton').addEventListener('click', function() {
+            var formData = new FormData(document.getElementById('textForm'));
+            
+            fetch('https://venom343.pythonanywhere.com/convert_text', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                } else {
+                    document.getElementById('convertedText').value = data.convertedText;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while converting the text.');
+            });
+        });
+
+        document.getElementById('copyTextButton').addEventListener('click', function() {
+            var convertedText = document.getElementById('convertedText');
+            convertedText.select();
+            document.execCommand('copy');
+            alert('Converted text copied to clipboard!');
         });
     </script>
 </body>
