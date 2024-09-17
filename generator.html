@@ -80,9 +80,9 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
 
-        textarea#convertedText {
+        #convertedTextDiv {
             width: 100%;
-            height: 100px;
+            min-height: 100px;
             margin-top: 10px;
             background-color: #2e2e2e;
             color: #ffffff;
@@ -90,6 +90,8 @@
             padding: 10px;
             resize: vertical;
             font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
 
         #infoMessage {
@@ -132,24 +134,22 @@
                 <button type="submit">Generate PDF</button>
             </form>
             <button type="button" id="convertTextButton">Convert Text Only</button>
-            <textarea id="convertedText" rows="5" cols="50" readonly></textarea>
+            <!-- Changed textarea to a div for custom font display -->
+            <div id="convertedTextDiv" readonly></div>
             <p id="infoMessage">
                 Unsupported characters have been skipped in the converted text.
             </p>
             <button type="button" id="copyTextButton">Copy Converted Text</button>
-            <div class="result" id="result">
-                <!-- The download button will be created dynamically -->
-            </div>
+            <div class="result" id="result"></div>
         </div>
     </section>
     <script>
-        document.getElementById('textForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
+        document.getElementById('textForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
 
-            const formData = new FormData();
-            formData.append('fontFile', document.getElementById('fontFile').files[0]);
-            formData.append('textInput', document.getElementById('textInput').value);
-            formData.append('backgroundChoice', document.getElementById('backgroundChoice').value);
+            const formData = new FormData(document.getElementById('textForm'));
+            const background_choice = document.getElementById('backgroundChoice').value;
+            formData.append('backgroundChoice', background_choice);
 
             try {
                 const response = await fetch('https://venom343.pythonanywhere.com/generate', {
@@ -161,11 +161,28 @@
                     const data = await response.json();
                     const filename = data.filename;
                     const convertedText = data.convertedText;
+                    const fontFilename = data.fontFilename;
                     const resultDiv = document.getElementById('result');
-                    const convertedTextArea = document.getElementById('convertedText');
+                    const convertedTextDiv = document.getElementById('convertedTextDiv');
 
-                    // Update the converted text area
-                    convertedTextArea.value = convertedText;
+                    // Update the converted text display
+                    convertedTextDiv.textContent = convertedText;
+
+                    // Dynamically load the uploaded font
+                    const fontURL = `https://venom343.pythonanywhere.com/fonts/${fontFilename}`;
+                    const style = document.createElement('style');
+                    style.innerHTML = `
+                        @font-face {
+                            font-family: 'UserFont';
+                            src: url('${fontURL}') format('truetype');
+                            font-weight: normal;
+                            font-style: normal;
+                        }
+                        #convertedTextDiv {
+                            font-family: 'UserFont', monospace;
+                        }
+                    `;
+                    document.head.appendChild(style);
 
                     // Display the PDF in an iframe
                     resultDiv.innerHTML = `<iframe src="https://venom343.pythonanywhere.com/download/${filename}"></iframe>`;
@@ -196,34 +213,57 @@
             }
         });
 
-        document.getElementById('convertTextButton').addEventListener('click', function() {
+        document.getElementById('convertTextButton').addEventListener('click', async function () {
             const formData = new FormData(document.getElementById('textForm'));
 
-            fetch('https://venom343.pythonanywhere.com/convert_text', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert('Error: ' + data.error);
+            try {
+                const response = await fetch('https://venom343.pythonanywhere.com/convert_text', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    const convertedText = data.convertedText;
+                    const fontFilename = data.fontFilename;
+                    const convertedTextDiv = document.getElementById('convertedTextDiv');
+
+                    // Update the converted text display
+                    convertedTextDiv.textContent = convertedText;
+
+                    // Dynamically load the uploaded font
+                    const fontURL = `https://venom343.pythonanywhere.com/fonts/${fontFilename}`;
+                    const style = document.createElement('style');
+                    style.innerHTML = `
+                        @font-face {
+                            font-family: 'UserFont';
+                            src: url('${fontURL}') format('truetype');
+                            font-weight: normal;
+                            font-style: normal;
+                        }
+                        #convertedTextDiv {
+                            font-family: 'UserFont', monospace;
+                        }
+                    `;
+                    document.head.appendChild(style);
                 } else {
-                    const convertedTextArea = document.getElementById('convertedText');
-                    convertedTextArea.value = data.convertedText;
+                    alert('Error: ' + data.error);
                 }
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error('Error:', error);
                 alert('An error occurred while converting the text.');
-            });
+            }
         });
 
-        document.getElementById('copyTextButton').addEventListener('click', function() {
-            const convertedText = document.getElementById('convertedText');
-            convertedText.select();
-            convertedText.setSelectionRange(0, 99999); // For mobile devices
+        document.getElementById('copyTextButton').addEventListener('click', function () {
+            const convertedTextDiv = document.getElementById('convertedTextDiv');
+            const range = document.createRange();
+            range.selectNodeContents(convertedTextDiv);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
 
-            navigator.clipboard.writeText(convertedText.value)
+            navigator.clipboard.writeText(convertedTextDiv.textContent)
                 .then(() => {
                     alert('Converted text copied to clipboard!');
                 })
