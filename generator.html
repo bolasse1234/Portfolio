@@ -186,7 +186,15 @@
                 if (data.error) {
                     alert('Error: ' + data.error);
                 } else {
-                    document.getElementById('convertedText').value = data.convertedText;
+                    const convertedTextArea = document.getElementById('convertedText');
+                    convertedTextArea.value = data.convertedText;
+                    convertedTextArea.style.fontFamily = 'monospace';  // Use a monospace font for better visibility
+                    
+                    // Highlight unsupported characters
+                    const unsupportedChars = data.convertedText.split('').map(char => char === '□' ? '<span style="color: red;">□</span>' : char).join('');
+                    const highlightDiv = document.createElement('div');
+                    highlightDiv.innerHTML = `<p>Red squares (□) indicate unsupported characters:</p><p>${unsupportedChars}</p>`;
+                    document.getElementById('result').appendChild(highlightDiv);
                 }
             })
             .catch(error => {
